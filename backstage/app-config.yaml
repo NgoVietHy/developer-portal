@@ -1,0 +1,89 @@
+app:
+  title: Developer Portal DevSecOps
+  baseUrl: http://localhost:3000
+
+organization:
+  name: Platform Engineering Team
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+  csp:
+    connect-src: ["'self'", 'http:', 'https:']
+  cors:
+    origin: http://localhost:3000
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+      database: ${POSTGRES_DB}
+  actions:
+    pluginSources:
+      - auth
+      - catalog
+      - scaffolder
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+techdocs:
+  builder: local
+  generator:
+    runIn: local
+  publisher:
+    type: local
+
+auth:
+  providers:
+    guest: {}
+  experimentalDynamicClientRegistration:
+    enabled: false
+  experimentalClientIdMetadataDocuments:
+    enabled: true
+
+scaffolder: {}
+
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+    pullRequestBranchName: backstage-integration
+  rules:
+    - allow: [Component, System, API, Resource, Location, User, Group, Domain]
+  locations:
+    - type: file
+      target: ../../catalog/all-components.yaml
+    - type: file
+      target: ../../examples/template/template.yaml
+      rules:
+        - allow: [Template]
+
+kubernetes:
+  frontend:
+    podDelete:
+      enabled: false
+  serviceLocatorMethod:
+    type: multiTenant
+  clusterLocatorMethods:
+    - type: config
+      clusters:
+        - name: ${K8S_CLUSTER_NAME}
+          title: ${K8S_CLUSTER_NAME}
+          url: ${K8S_CLUSTER_URL}
+          authProvider: serviceAccount
+          skipTLSVerify: true
+          skipMetricsLookup: false
+
+permission:
+  enabled: true
+
+mcpActions:
+  name: Developer Portal
+  description: Internal actions for platform engineering use cases

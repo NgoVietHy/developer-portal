@@ -1,0 +1,53 @@
+name: Deploy to Minikube
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Docker image tag to deploy
+        required: false
+        default: latest
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "image_tag=${{ github.event.inputs.image_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "image_tag=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare scripts
+        run: chmod +x scripts/*.sh
+
+      - name: Ensure Backstage secret is updated
+        shell: bash
+        run: |
+          kubectl -n developer-portal create secret generic backstage-secret \
+            --from-literal=GITHUB_TOKEN="${{ secrets.BACKSTAGE_GITHUB_TOKEN }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy workloads
+        shell: bash
+        env:
+          GHCR_OWNER: ${{ github.repository_owner }}
+          GHCR_REPO: ${{ github.event.repository.name }}
+          IMAGE_TAG: ${{ steps.vars.outputs.image_tag }}
+        run: ./scripts/deploy-k8s.sh

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-identity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-identity
+      backstage.io/kubernetes-id: service-identity
+  template:
+    metadata:
+      labels:
+        app: service-identity
+        backstage.io/kubernetes-id: service-identity
+    spec:
+      containers:
+        - name: service-identity
+          image: ghcr.io/your-org/developer-portal/service-identity:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "8082"
+            - name: SERVICE_NAME
+              value: service-identity
+          ports:
+            - containerPort: 8082
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8082
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8082
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-identity
+  labels:
+    app: service-identity
+spec:
+  selector:
+    app: service-identity
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082

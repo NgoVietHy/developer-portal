@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: developer-portal
+  description: Internal Backstage portal for Kubernetes DevSecOps governance.
+  annotations:
+    github.com/project-slug: YOUR_GITHUB_ORG/developer-portal
+    github.com/workflows: ci.yml
+    backstage.io/kubernetes-id: backstage
+    backstage.io/kubernetes-namespace: developer-portal
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: website
+  owner: group:default/platform-team
+  lifecycle: production
+  system: developer-portal

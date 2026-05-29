@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: local-services
+spec:
+  type: file
+  targets:
+    - ../services/service-catalog/catalog-info.yaml
+    - ../services/service-identity/catalog-info.yaml
+    - ./system.yaml
+    - ./org.yaml

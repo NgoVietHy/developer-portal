@@ -1,0 +1,3 @@
+site_name: developer-portal
+nav:
+  - Home: docs/index.md

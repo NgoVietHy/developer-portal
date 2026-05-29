@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-catalog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-catalog
+      backstage.io/kubernetes-id: service-catalog
+  template:
+    metadata:
+      labels:
+        app: service-catalog
+        backstage.io/kubernetes-id: service-catalog
+    spec:
+      containers:
+        - name: service-catalog
+          image: ghcr.io/your-org/developer-portal/service-catalog:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "8081"
+            - name: SERVICE_NAME
+              value: service-catalog
+          ports:
+            - containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-catalog
+  labels:
+    app: service-catalog
+spec:
+  selector:
+    app: service-catalog
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081

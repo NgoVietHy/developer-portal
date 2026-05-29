@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backstage-config
+data:
+  NODE_ENV: production
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: backstage
+  BACKSTAGE_BASE_URL: http://portal.local
+  BACKEND_BASE_URL: http://portal.local/api
+  K8S_CLUSTER_NAME: minikube
+  K8S_CLUSTER_URL: https://kubernetes.default.svc

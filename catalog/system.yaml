@@ -1,0 +1,7 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: developer-portal
+  description: Internal platform system for service governance and operations
+spec:
+  owner: group:default/platform-team

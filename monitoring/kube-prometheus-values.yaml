@@ -1,0 +1,15 @@
+grafana:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - grafana.local
+  adminUser: admin
+  adminPassword: admin123456
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: true
+
+alertmanager:
+  enabled: false
