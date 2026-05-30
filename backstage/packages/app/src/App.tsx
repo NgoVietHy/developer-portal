@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Navigate, Route } from 'react-router-dom';
 import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
 import {
@@ -31,46 +30,7 @@ import { AppRouter, FlatRoutes } from '@backstage/core-app-api';
 import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
 import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
-
-function GuestAutoSignIn(props: {
-  onSignInSuccess: (identityApi: any) => void;
-}) {
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-
-    fetch('/api/auth/guest/refresh', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: '{}',
-    })
-      .then(async response => {
-        const payload = await response.json();
-        if (!response.ok) {
-          throw new Error(payload?.error?.message ?? `HTTP ${response.status}`);
-        }
-        if (active) {
-          props.onSignInSuccess(payload);
-        }
-      })
-      .catch(err => {
-        if (active) {
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [props]);
-
-  if (error) {
-    return <div style={{ padding: 24 }}>Guest sign-in failed: {error}</div>;
-  }
-
-  return <div style={{ padding: 24 }}>Signing in as guest...</div>;
-}
+import { SignInPage } from '@backstage/core-components';
 
 const app = createApp({
   apis,
@@ -92,9 +52,7 @@ const app = createApp({
     });
   },
   components: {
-    SignInPage: props => (
-      <GuestAutoSignIn onSignInSuccess={props.onSignInSuccess} />
-    ),
+    SignInPage: props => <SignInPage {...props} auto providers={['guest']} />,
   },
 });
 
