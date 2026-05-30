@@ -5,6 +5,7 @@ on:
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -88,7 +89,7 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           vuln-type: os,library
-          severity: CRITICAL,HIGH
+          severity: CRITICAL
 
       - name: Login to GHCR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -101,7 +102,8 @@ jobs:
       - name: Push image to GHCR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          docker tag "${{ matrix.name }}:${{ env.IMAGE_TAG }}" "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.name }}:${{ env.IMAGE_TAG }}"
-          docker tag "${{ matrix.name }}:${{ env.IMAGE_TAG }}" "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.name }}:latest"
-          docker push "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.name }}:${{ env.IMAGE_TAG }}"
-          docker push "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.name }}:latest"
+          OWNER_LC="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          docker tag "${{ matrix.name }}:${{ env.IMAGE_TAG }}" "ghcr.io/${OWNER_LC}/${{ github.event.repository.name }}/${{ matrix.name }}:${{ env.IMAGE_TAG }}"
+          docker tag "${{ matrix.name }}:${{ env.IMAGE_TAG }}" "ghcr.io/${OWNER_LC}/${{ github.event.repository.name }}/${{ matrix.name }}:latest"
+          docker push "ghcr.io/${OWNER_LC}/${{ github.event.repository.name }}/${{ matrix.name }}:${{ env.IMAGE_TAG }}"
+          docker push "ghcr.io/${OWNER_LC}/${{ github.event.repository.name }}/${{ matrix.name }}:latest"

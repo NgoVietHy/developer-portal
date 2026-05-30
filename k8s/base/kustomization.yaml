@@ -13,6 +13,7 @@ resources:
   - backstage/backstage-backend.yaml
   - backstage/backstage-frontend.yaml
   - backstage/ingress.yaml
+  - backstage/ingress-public.yaml
   - services/service-catalog.yaml
   - services/service-identity.yaml
   - rbac/backstage-rbac.yaml

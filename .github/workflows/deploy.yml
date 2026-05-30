@@ -20,7 +20,11 @@ jobs:
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_BASE_URL: http://103.72.97.87
+      GRAFANA_URL: http://103.72.97.87:3000
+      PROMETHEUS_URL: http://103.72.97.87:9090
     steps:
       - uses: actions/checkout@v4
 
@@ -34,20 +38,24 @@ jobs:
             echo "image_tag=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Prepare scripts
-        run: chmod +x scripts/*.sh
+      - name: Print target image tag
+        shell: bash
+        run: echo "Deploy validation for image tag ${{ steps.vars.outputs.image_tag }}"
 
-      - name: Ensure Backstage secret is updated
+      - name: Validate public endpoints
         shell: bash
         run: |
-          kubectl -n developer-portal create secret generic backstage-secret \
-            --from-literal=GITHUB_TOKEN="${{ secrets.BACKSTAGE_GITHUB_TOKEN }}" \
-            --dry-run=client -o yaml | kubectl apply -f -
+          set -euo pipefail
+          curl -fsS "${PUBLIC_BASE_URL}/" >/dev/null
+          curl -fsS "${GRAFANA_URL}/login" >/dev/null
+          curl -fsS "${PROMETHEUS_URL}/-/ready" >/dev/null
 
-      - name: Deploy workloads
+      - name: Validate Backstage APIs
         shell: bash
-        env:
-          GHCR_OWNER: ${{ github.repository_owner }}
-          GHCR_REPO: ${{ github.event.repository.name }}
-          IMAGE_TAG: ${{ steps.vars.outputs.image_tag }}
-        run: ./scripts/deploy-k8s.sh
+        run: |
+          set -euo pipefail
+          token=$(curl -fsS -X POST -H "Content-Type: application/json" -d '{}' "${PUBLIC_BASE_URL}/api/auth/guest/refresh" | python3 -c "import json,sys; print(json.load(sys.stdin).get('backstageIdentity',{}).get('token',''))")
+          test -n "${token}"
+          curl -fsS -H "Authorization: Bearer ${token}" "${PUBLIC_BASE_URL}/api/catalog/entities?limit=20" >/dev/null
+          curl -fsS -H "Authorization: Bearer ${token}" "${PUBLIC_BASE_URL}/api/kubernetes/clusters" >/dev/null
+          curl -fsS -H "Authorization: Bearer ${token}" "${PUBLIC_BASE_URL}/api/techdocs/metadata/entity/default/component/service-catalog" >/dev/null

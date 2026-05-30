@@ -2,7 +2,7 @@ FROM node:22-bookworm-slim AS builder
 
 ENV PYTHON=/usr/bin/python3
 
-RUN apt-get update && apt-get install -y --no-install-recommends python3 g++ build-essential && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip g++ build-essential && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace/backstage
 
@@ -29,7 +29,8 @@ RUN yarn tsc && yarn build:backend
 FROM node:22-bookworm-slim
 
 ENV PYTHON=/usr/bin/python3
-RUN apt-get update && apt-get install -y --no-install-recommends python3 g++ build-essential && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip g++ build-essential && rm -rf /var/lib/apt/lists/*
+RUN pip3 install --break-system-packages --no-cache-dir mkdocs-techdocs-core==1.*
 
 WORKDIR /app
 COPY --from=builder /workspace/backstage ./

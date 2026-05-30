@@ -4,7 +4,7 @@ metadata:
   name: service-identity
   description: Sample identity service for Developer Portal demo
   annotations:
-    github.com/project-slug: YOUR_GITHUB_ORG/developer-portal
+    github.com/project-slug: NgoVietHy/developer-portal
     github.com/workflows: ci.yml
     backstage.io/kubernetes-id: service-identity
     backstage.io/kubernetes-namespace: developer-portal

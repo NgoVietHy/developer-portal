@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Navigate, Route } from 'react-router-dom';
 import { apiDocsPlugin, ApiExplorerPage } from '@backstage/plugin-api-docs';
 import {
@@ -25,18 +26,51 @@ import { entityPage } from './components/catalog/EntityPage';
 import { searchPage } from './components/search/SearchPage';
 import { Root } from './components/Root';
 
-import {
-  AlertDisplay,
-  OAuthRequestDialog,
-  SignInPage,
-} from '@backstage/core-components';
 import { createApp } from '@backstage/app-defaults';
 import { AppRouter, FlatRoutes } from '@backstage/core-app-api';
 import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
 import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
-import { NotificationsPage } from '@backstage/plugin-notifications';
-import { SignalsDisplay } from '@backstage/plugin-signals';
+
+function GuestAutoSignIn(props: {
+  onSignInSuccess: (identityApi: any) => void;
+}) {
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    fetch('/api/auth/guest/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+      .then(async response => {
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload?.error?.message ?? `HTTP ${response.status}`);
+        }
+        if (active) {
+          props.onSignInSuccess(payload);
+        }
+      })
+      .catch(err => {
+        if (active) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [props]);
+
+  if (error) {
+    return <div style={{ padding: 24 }}>Guest sign-in failed: {error}</div>;
+  }
+
+  return <div style={{ padding: 24 }}>Signing in as guest...</div>;
+}
 
 const app = createApp({
   apis,
@@ -58,7 +92,9 @@ const app = createApp({
     });
   },
   components: {
-    SignInPage: props => <SignInPage {...props} auto providers={['guest']} />,
+    SignInPage: props => (
+      <GuestAutoSignIn onSignInSuccess={props.onSignInSuccess} />
+    ),
   },
 });
 
@@ -96,15 +132,11 @@ const routes = (
     </Route>
     <Route path="/settings" element={<UserSettingsPage />} />
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
-    <Route path="/notifications" element={<NotificationsPage />} />
   </FlatRoutes>
 );
 
 export default app.createRoot(
   <>
-    <AlertDisplay />
-    <OAuthRequestDialog />
-    <SignalsDisplay />
     <AppRouter>
       <Root>{routes}</Root>
     </AppRouter>
