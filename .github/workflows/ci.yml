@@ -82,7 +82,7 @@ jobs:
           docker build -f "${{ matrix.dockerfile }}" -t "${{ matrix.name }}:${{ env.IMAGE_TAG }}" "${{ matrix.context }}"
 
       - name: Trivy scan
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ matrix.name }}:${{ env.IMAGE_TAG }}
           format: table
